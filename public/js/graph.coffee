@@ -26,9 +26,9 @@ class Integrator
 [can_w, can_h] = [$(window).width(), 600]
 [borderLeft, borderRight, borderTop, borderBottom] = [120, can_w-80, 60, can_h-70]
 [dataMin, dataMax] = [0, 0]
-# [volumeInterval, volumeIntervalMinor, yearInterval] = [5, 2.5, 10]
-[volumeInterval, volumeIntervalMinor, yearInterval] = [500, 250, 10]
-[yearMin, yearMax] = [0, 0]
+# [yInterval, yIntervalMinor, xInterval] = [5, 2.5, 10]
+[yInterval, yIntervalMinor, xInterval] = [500, 250, 10]
+[xMin, yMin] = [0, 0]
 [rowCount, columnCount, currentColumn] = [0, 0, 0]
 [label, data] = [null, null]
 [tabTop, tabBottom] = [borderTop - 35, borderTop]
@@ -40,8 +40,8 @@ graph = (p) ->
   p.setup = ->
     [rowCount, columnCount] = [data.length-1, label.length-1]
     [dateMin, dateMax] = [data[0][columnCount], data[rowCount][columnCount]]
-    [yearMin, monthMin, dayMin] = [dateMin[0], dateMin[1], dateMin[2]]
-    [yearMax, monthMax, dayMax] = [dateMax[0], dateMax[1], dateMax[2]]
+    [xMin, xMinorMin, xMinorSubMin] = [dateMin[0], dateMin[1], dateMin[2]]
+    [yMin, xMinorMax, xMinorSubMax] = [dateMax[0], dateMax[1], dateMax[2]]
     p.size(can_w, can_h)
     p.frameRate(20)
     p.smooth()
@@ -51,18 +51,14 @@ graph = (p) ->
       interpolators[row].set_target(data[row][0])
 
   p.draw = ->
-    p.background(224)
-    p.fill(255)
-    p.rectMode(p.CORNERS)
-    p.noStroke()
-    p.rect(borderLeft, borderTop, borderRight, borderBottom)
+    drawMainFrame(p)
     
     for row in [0..rowCount]
       interpolators[row].update()
       
     drawDataArea(p, [0,140,180])
-    drawYearLabels(p)
-    drawVolumeLabels(p)
+    drawXLabels(p)
+    drawYLabels(p)
     drawDataHighlight(p, [150, 10, 20])
     drawTabs(p)
 
@@ -77,6 +73,13 @@ graph = (p) ->
     for row in [0..rowCount]
       interpolators[row].set_target(data[row][col])
 
+  drawMainFrame = (p)->
+    p.background(224)
+    p.fill(255)
+    p.rectMode(p.CORNERS)
+    p.noStroke()
+    p.rect(borderLeft, borderTop, borderRight, borderBottom)
+  
   setTabPositions = (p)->
     for col in [0...columnCount]
       tabLeft[col] = tabRight[col-1] if col > 0
@@ -98,27 +101,27 @@ graph = (p) ->
       padTop = (tabBottom - tabTop)/2
       p.text(title, x1+padLeft, x2+padTop)
 
-  drawYearLabels = (p)->
+  drawXLabels = (p)->
     p.fill(0)
     p.textSize(10)
     p.textAlign(p.CENTER, p.TOP)
     p.stroke(255)
     p.strokeWeight(2)
   
-    for year in [yearMin..yearMax] by yearInterval
-      x = p.map(year, yearMin, yearMax, borderLeft, borderRight)
-      p.text(year, x, borderBottom+10)
+    for xval in [xMin..yMin] by xInterval
+      x = p.map(xval, xMin, yMin, borderLeft, borderRight)
+      p.text(xval, x, borderBottom+10)
       p.line(x, borderTop, x, borderBottom)
   
-  drawVolumeLabels = (p)->
+  drawYLabels = (p)->
     p.fill(0)
     p.textSize(10)
     p.stroke(128)
     p.strokeWeight(1)
   
-    for v in [dataMin..dataMax] by volumeIntervalMinor
+    for v in [dataMin..dataMax] by yIntervalMinor
       y = p.map(v, dataMin, dataMax, borderBottom, borderTop)
-      if v % volumeInterval is 0
+      if v % yInterval is 0
         switch v
           when dataMin, dataMax then p.textAlign(p.RIGHT)
           else p.textAlign(p.RIGHT, p.CENTER)
@@ -136,7 +139,7 @@ graph = (p) ->
     for row in [0..rowCount]
       year = data[row][columnCount][0]
       val = interpolators[row].value
-      x = p.map(year, yearMin, yearMax, borderLeft, borderRight)
+      x = p.map(year, xMin, yMin, borderLeft, borderRight)
       y = p.map(val, dataMin, dataMax, borderBottom, borderTop)
       p.curveVertex(x, y)
       if row is 0 or row is rowCount
@@ -150,7 +153,7 @@ graph = (p) ->
     for row in [0..rowCount]
       year = data[row][columnCount][0]
       val  = data[row][currentColumn]
-      x = p.map(year, yearMin, yearMax, borderLeft, borderRight)
+      x = p.map(year, xMin, yMin, borderLeft, borderRight)
       y = p.map(val, dataMin, dataMax, borderBottom, borderTop)
       if x - 6 < p.mouseX < x + 6 and borderTop < p.mouseY < borderBottom
         p.stroke(r,g,b)
@@ -167,7 +170,7 @@ $ ->
   $.getJSON '/data.json', (json) ->
     label = json.label
     data = json.data
-    dataMax = json.dataMax
+    dataMax = Math.ceil(json.dataMax/10.0)*10
     dataMin = if json.dataMin > 0 then 0 else json.dataMin
 
     canvas = $("#processing")[0]

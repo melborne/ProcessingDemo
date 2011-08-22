@@ -15,6 +15,7 @@ get '/' do
 end
 
 get '/data.json' do
+  redirect '/' unless request.xhr?
   content_type :json
   parse_data(*F[:census]).to_json
 end
