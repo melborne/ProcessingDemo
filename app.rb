@@ -2,7 +2,7 @@
 require "json"
 
 F = { milk: ['public/milk-tea-coffee.tsv', '\t', [5, 2.5, 10]],
-      census: ['public/census.csv', ' ', [500, 250, 10]]  }
+      census: ['public/census.ssv', ' ', [500, 250, 10]]  }
 
 configure do
   APP_TITLE = "Visualizing-Data with Processing Demo"
