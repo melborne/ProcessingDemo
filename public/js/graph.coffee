@@ -1,12 +1,10 @@
 class Integrator
+  # Ben Fry's Integrator
   constructor: (@value, @damping=0.5, @attraction=0.2) ->
     @mass = 1
     @targeting = false
     @vel = 0
     @force = 0.1
-
-  set: (v)->
-    @value = v
 
   update: ->
     if @targeting
@@ -20,20 +18,18 @@ class Integrator
     @targeting = true
     @target = t
 
-  reset_target: ->
-    @targeting = false
-
 [can_w, can_h] = [$(window).width(), 600]
 [borderLeft, borderRight, borderTop, borderBottom] = [120, can_w-80, 60, can_h-70]
 [dataMin, dataMax] = [0, 0]
-# [yInterval, yIntervalMinor, xInterval] = [5, 2.5, 10]
-[yInterval, yIntervalMinor, xInterval] = [500, 250, 10]
+[yInterval, yIntervalMinor, xInterval] = [0, 0, 0]
 [xMin, yMin] = [0, 0]
 [rowCount, columnCount, currentColumn] = [0, 0, 0]
 [label, data] = [null, null]
 [tabTop, tabBottom] = [borderTop - 35, borderTop]
 [tabLeft, tabRight] = [[borderLeft], [borderLeft]]
 tabPad = 10
+color_set = [[138,192,222],[133,219,24],[246, 177, 195]]
+areaColor = color_set[0]
 interpolators = []
 
 graph = (p) ->
@@ -56,10 +52,10 @@ graph = (p) ->
     for row in [0..rowCount]
       interpolators[row].update()
       
-    drawDataArea(p, [0,140,180])
+    drawDataArea(p, areaColor)
     drawXLabels(p)
     drawYLabels(p)
-    drawDataHighlight(p, [150, 10, 20])
+    drawDataHighlight(p, [255, 63, 0])
     drawTabs(p)
 
   p.mousePressed = ->
@@ -70,6 +66,7 @@ graph = (p) ->
   
   setCurrent = (col)->
     currentColumn = col
+    areaColor = color_set[col]
     for row in [0..rowCount]
       interpolators[row].set_target(data[row][col])
 
@@ -167,11 +164,13 @@ graph = (p) ->
         p.text("#{val}(#{year})", x+3, y+20)
         
 $ ->
-  $.getJSON '/data.json', (json) ->
+  path = window.location.href.match(/\/\w+$/)
+  $.getJSON "#{path}.json", (json) ->
     label = json.label
     data = json.data
     dataMax = Math.ceil(json.dataMax/10.0)*10
     dataMin = if json.dataMin > 0 then 0 else json.dataMin
+    [yInterval, yIntervalMinor, xInterval] = json.intervals
 
     canvas = $("#processing")[0]
     processing = new Processing(canvas, graph)

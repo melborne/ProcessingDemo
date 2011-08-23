@@ -1,23 +1,29 @@
 # encoding: UTF-8
-require "sinatra"
 require "json"
 
-F = { milk: ['public/milk-tea-coffee.tsv', '\t'],
-      patent: ['public/patent.csv', ','],
-      census: ['public/census.txt', ' ']  }
+F = { milk: ['public/milk-tea-coffee.tsv', '\t', [5, 2.5, 10]],
+      census: ['public/census.csv', ' ', [500, 250, 10]]  }
 
 configure do
-  APP_TITLE = "app"
+  APP_TITLE = "Visualizing-Data with Processing Demo"
 end
 
 get '/' do
-  haml :index
+  redirect '/milk'
 end
 
-get '/data.json' do
-  redirect '/' unless request.xhr?
-  content_type :json
-  parse_data(*F[:census]).to_json
+paths = ['milk', 'census']
+paths.each_with_index do |path, i|
+  get "/#{path}" do
+    @link = paths[(i+1)%2]
+    haml :index
+  end
+
+  get "/#{path}.json" do
+    redirect path unless request.xhr?
+    content_type :json
+    parse_data(*F[path.intern]).to_json
+  end
 end
 
 get '/style.css' do
@@ -25,14 +31,14 @@ get '/style.css' do
 end
 
 helpers do
-  def parse_data(path, sep)
+  def parse_data(path, sep, intervals)
     q = {}
     File.open(path) do |file|
       q['label'] = retrieve_label(file.lines.first, sep) 
       q['data'] = retrieve_data(file.lines, sep)
       all_data = q['data'].map { |d| d[0..-2] }.flatten
       q['dataMin'], q['dataMax'] = all_data.min.floor, all_data.max.ceil
-      p q
+      q['intervals'] = intervals
     end
     q
   end

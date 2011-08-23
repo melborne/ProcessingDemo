@@ -1,12 +1,3 @@
-$font_color: #D0FFD0;
-$bg_color: #262626;
-$canvas_color: #FFFFFF;
-
-@mixin rounded($topl:8px, $topr:8px, $btmr:8px, $btml:8px) {
-  border-radius: $topl $topr $btmr $btml;
-  -moz-border-radius: $topl $topr $btmr $btml;
-}
-
 * {
   margin: 0;
   padding: 0;
@@ -14,25 +5,21 @@ $canvas_color: #FFFFFF;
 }
 
 body {
-  color: $font_color;
-  background-color: $bg_color;
+  color: #85DB18;
+  background-color: #262626;
   margin: 60px auto;
 }
 
-canvas {
+#title {
+  margin-left: 30px;
+  margin-bottom: 20px;
+  float: left;
 }
 
-
-footer {
-  display: block;
-  height: 30px;
-  text-align: center;
-  margin-top: 20px;
-  a {
-    text-decoration: none;
-    color: $font_color;
-    &:visited {
-      color: $font_color;
-    }
-  }
+#link {
+  margin-right: 30px;
+  margin-bottom: 20px;
+  font-size: 14pt;
+  color: #D0FFD0;
+  float: right;
 }
